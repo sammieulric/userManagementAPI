@@ -9,7 +9,7 @@ const generateToken = (id) => {
 
 // Create User
 const createUser = async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, email, password , role} = req.body;
 
     try {
         // Check if user exists
@@ -20,12 +20,13 @@ const createUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Create user
-        const user = await User.create({ username, email, password: hashedPassword });
+        const user = await User.create({ username, email, password: hashedPassword, role });
 
         res.status(201).json({
             id: user.id,
             username: user.username,
             email: user.email,
+            role: user.role,
             token: generateToken(user.id),
         });
     } catch (error) {
@@ -36,7 +37,7 @@ const createUser = async (req, res) => {
 // Get Users
 const getUsers = async (req, res) => {
     try {
-        const users = await User.findAll({ attributes: ['id', 'username', 'email', 'created_at'] });
+        const users = await User.findAll({ attributes: ['id', 'username', 'email', 'role', 'created_at'] });
         res.json(users);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -54,6 +55,7 @@ const loginUser = async (req, res) => {
                 id: user.id,
                 username: user.username,
                 email: user.email,
+                role: user.role,
                 token: generateToken(user.id),
             });
         } else {
@@ -66,7 +68,7 @@ const loginUser = async (req, res) => {
 
 // Update User
 const updateUser = async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, email, password, role } = req.body;
 
     try {
         const user = await User.findByPk(req.params.id);
@@ -74,6 +76,7 @@ const updateUser = async (req, res) => {
 
         user.username = username || user.username;
         user.email = email || user.email;
+        user.role = role || user.role;
         if (password) user.password = await bcrypt.hash(password, 10);
 
         await user.save();

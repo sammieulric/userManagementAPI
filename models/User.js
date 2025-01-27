@@ -21,10 +21,11 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    created_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-    },
+    role: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'user', // Default role is "user"
+    }
 });
 
 module.exports = User;
