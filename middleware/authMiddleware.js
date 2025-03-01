@@ -9,14 +9,34 @@ const protect = async (req, res, next) => {
             token = req.headers.authorization.split(' ')[1];
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-            req.user = await User.findById(decoded.id).select('-password');
+            // Attach user info to the request
+            req.user = await User.findByPk(decoded.id, {
+                attributes: { exclude: ["password"] }
+            });
+
+            if (!req.user) {
+                console.log("❌ Token is valid, but user not found in DB");
+                return res.status(401).json({ message: "User not found" });
+            }
+
             next();
         } catch (error) {
-            res.status(401).json({ message: 'Not authorized, token failed' });
+            console.log("❌ Invalid token:", error.message);
+            return res.status(401).json({ message: "Not authorized, token failed" });
         }
+    } else {
+        console.log("❌ No token provided");
+        return res.status(401).json({ message: "Not authorized, no token" });
     }
-
-    if (!token) res.status(401).json({ message: 'Not authorized, no token' });
 };
 
-module.exports = { protect };
+// Middleware to restrict routes to admins only
+const adminOnly = (req, res, next) => {
+    if (req.user && req.user.role === 'admin') {
+        next();
+    } else {
+        res.status(403).json({ message: 'Access denied. Admins only.' });
+    }
+};
+
+module.exports = { protect, adminOnly };
